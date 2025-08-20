@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
 import Select from "react-select";
+import { useEffect, useState } from "react";
 import { searchAirports } from "../services/flightService";
 
 interface Option {
@@ -43,6 +43,9 @@ const AirportPicker = ({
       isClearable
       className="w-full"
       classNamePrefix="airport-select"
+      components={{
+        IndicatorSeparator: () => null,
+      }}
       styles={{
         control: (base) => ({
           ...base,
@@ -50,6 +53,7 @@ const AirportPicker = ({
           padding: "2px",
           borderColor: "var(--color-border)",
           boxShadow: "none",
+          textAlign: "left",
           "&:hover": { borderColor: "var(--color-primary)" },
         }),
         option: (base, state) => ({
@@ -60,6 +64,10 @@ const AirportPicker = ({
             ? "#eafdfd"
             : "white",
           color: state.isSelected ? "white" : "var(--color-foreground)",
+        }),
+        menu: (base) => ({
+          ...base,
+          textAlign: "left",
         }),
       }}
     />
