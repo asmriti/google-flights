@@ -7,44 +7,28 @@ import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import { searchFlights } from "../services/searchFlightService";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import FlightDetailsCard from "./FlightDetailsCard";
+import { loadFromStorage, saveToStorage } from "../utils/LocalStorage";
+
+type SearchForm = {
+  tripType: "roundtrip" | "oneway" | "multicity";
+  originAirport: any;
+  destinationAirport: any;
+  departureDate: Date | null;
+  returnDate: Date | null;
+  passengers: {
+    adults: number;
+    children: number;
+    infantsInSeat: number;
+    infantsOnLap: number;
+  };
+  selectedClass: { value: string; label: string };
+};
 
 const FlightSearchForm = () => {
-  const [tripType, setTripType] = useState("roundtrip");
-  const [originAirport, setOriginAirport] = useState<any>(null);
-  const [destinationAirport, setDestinationAirport] = useState<any>(null);
-  const [departureDate, setDepartureDate] = useState<Date | null>(new Date());
-  const [returnDate, setReturnDate] = useState<Date | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [flights, setFlights] = useState<any[]>([]);
   const [showResults, setShowResults] = useState(false);
-  const [passengers, setPassengers] = useState({
-    adults: 1,
-    children: 0,
-    infantsInSeat: 0,
-    infantsOnLap: 0,
-  });
-
-  const totalPassengers =
-    passengers.adults +
-    passengers.children +
-    passengers.infantsInSeat +
-    passengers.infantsOnLap;
-
-  const increase = (field: keyof typeof passengers, max = 9) =>
-    setPassengers((prev) => ({
-      ...prev,
-      [field]: Math.min(prev[field] + 1, max),
-    }));
-
-  const decrease = (field: keyof typeof passengers, min = 0) =>
-    setPassengers((prev) => ({
-      ...prev,
-      [field]:
-        field === "adults"
-          ? Math.max(prev[field] - 1, 1)
-          : Math.max(prev[field] - 1, min),
-    }));
 
   const classOptions = [
     { value: "economy", label: "Economy" },
@@ -53,13 +37,49 @@ const FlightSearchForm = () => {
     { value: "first", label: "First" },
   ];
 
-  const [selectedClass, setSelectedClass] = useState<{
-    value: string;
-    label: string;
-  }>(classOptions[0]);
+  const [form, setForm] = useState<SearchForm>(() => {
+    const loaded = loadFromStorage<SearchForm>("searchForm", {
+      tripType: "roundtrip",
+      originAirport: null,
+      destinationAirport: null,
+      departureDate: new Date(),
+      returnDate: null,
+      passengers: { adults: 1, children: 0, infantsInSeat: 0, infantsOnLap: 0 },
+      selectedClass: classOptions[0],
+    });
+
+    return loaded;
+  });
+
+  const totalPassengers =
+    (form.passengers.adults ?? 0) +
+    (form.passengers.children ?? 0) +
+    (form.passengers.infantsInSeat ?? 0) +
+    (form.passengers.infantsOnLap ?? 0);
+
+  const increase = (field: keyof typeof form.passengers, max = 9) =>
+    setForm((prev) => ({
+      ...prev,
+      passengers: {
+        ...prev.passengers,
+        [field]: Math.min(prev.passengers[field] + 1, max),
+      },
+    }));
+
+  const decrease = (field: keyof typeof form.passengers, min = 0) =>
+    setForm((prev) => ({
+      ...prev,
+      passengers: {
+        ...prev.passengers,
+        [field]:
+          field === "adults"
+            ? Math.max(prev.passengers[field] - 1, 1)
+            : Math.max(prev.passengers[field] - 1, min),
+      },
+    }));
 
   const handleSearchFlights = () => {
-    if (!originAirport || !destinationAirport) {
+    if (!form.originAirport || !form.destinationAirport) {
       alert("Please select both origin and destination airports");
       return;
     }
@@ -79,6 +99,10 @@ const FlightSearchForm = () => {
       .finally(() => setLoading(false));
   }, []);
 
+  useEffect(() => {
+    saveToStorage("searchForm", form);
+  }, [form]);
+
   return (
     <div className="max-w-4xl mx-auto">
       <div
@@ -92,9 +116,14 @@ const FlightSearchForm = () => {
             {["roundtrip", "oneway", "multicity"].map((type) => (
               <button
                 key={type}
-                onClick={() => setTripType(type)}
+                onClick={() =>
+                  setForm((prev) => ({
+                    ...prev,
+                    tripType: type as "roundtrip" | "oneway" | "multicity",
+                  }))
+                }
                 className={`px-4 py-2 rounded-lg font-medium transition-colors focus-visible:outline-none ${
-                  tripType === type
+                  form.tripType === type
                     ? "bg-primary text-white"
                     : "bg-muted text-foreground hover:bg-muted/80"
                 }`}
@@ -118,8 +147,13 @@ const FlightSearchForm = () => {
                 From
               </label>
               <AirportPicker
-                value={originAirport}
-                onChange={setOriginAirport}
+                value={form.originAirport}
+                onChange={(airport) =>
+                  setForm((prevForm) => ({
+                    ...prevForm,
+                    originAirport: airport,
+                  }))
+                }
                 placeholder="Where from?"
               />
             </div>
@@ -131,8 +165,13 @@ const FlightSearchForm = () => {
                 To
               </label>
               <AirportPicker
-                value={destinationAirport}
-                onChange={setDestinationAirport}
+                value={form.destinationAirport}
+                onChange={(airport) =>
+                  setForm((prevForm) => ({
+                    ...prevForm,
+                    destinationAirport: airport,
+                  }))
+                }
                 placeholder="Where to?"
               />
             </div>
@@ -147,11 +186,16 @@ const FlightSearchForm = () => {
 
               <div>
                 <DatePicker
-                  selected={departureDate}
-                  onChange={(date) => setDepartureDate(date as Date)}
+                  selected={form.departureDate}
+                  onChange={(date) =>
+                    setForm((prevForm) => ({
+                      ...prevForm,
+                      departureDate: date as Date,
+                    }))
+                  }
                   selectsStart
-                  startDate={departureDate}
-                  endDate={returnDate}
+                  startDate={form.departureDate}
+                  endDate={form.returnDate}
                   minDate={new Date()}
                   dateFormat="dd MMM yyyy"
                   placeholderText="Select departure date"
@@ -159,19 +203,24 @@ const FlightSearchForm = () => {
                 />
               </div>
             </div>
-            {tripType === "roundtrip" && (
+            {form.tripType === "roundtrip" && (
               <div className="space-y-2">
                 <label className="flex items-center gap-2 peer-disabled:cursor-not-allowed text-sm font-medium text-foreground">
                   Return
                 </label>
                 <div>
                   <DatePicker
-                    selected={returnDate}
-                    onChange={(date) => setReturnDate(date as Date)}
+                    selected={form.returnDate}
+                    onChange={(date) =>
+                      setForm((prevForm) => ({
+                        ...prevForm,
+                        returnDate: date as Date,
+                      }))
+                    }
                     selectsEnd
-                    startDate={departureDate}
-                    endDate={returnDate}
-                    minDate={departureDate || new Date()}
+                    startDate={form.departureDate}
+                    endDate={form.returnDate}
+                    minDate={form.departureDate || new Date()}
                     dateFormat="dd MMM yyyy"
                     placeholderText="Select return date"
                     className="w-full px-3 py-2 border rounded-md border-border bg-white hover:border-primary focus-visible:outline-none"
@@ -233,18 +282,22 @@ const FlightSearchForm = () => {
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() =>
-                              decrease(key as keyof typeof passengers)
+                              decrease(key as keyof typeof form.passengers)
                             }
                             className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-300 hover:bg-muted"
                           >
                             –
                           </button>
                           <span className="w-6 text-center font-semibold">
-                            {passengers[key as keyof typeof passengers]}
+                            {
+                              form.passengers[
+                                key as keyof typeof form.passengers
+                              ]
+                            }
                           </span>
                           <button
                             onClick={() =>
-                              increase(key as keyof typeof passengers)
+                              increase(key as keyof typeof form.passengers)
                             }
                             className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-300 hover:bg-muted"
                           >
@@ -276,11 +329,12 @@ const FlightSearchForm = () => {
                 Class
               </label>
               <Select
-                value={selectedClass}
+                value={form.selectedClass}
                 options={classOptions}
-                onChange={(option) =>
-                  setSelectedClass(option || classOptions[0])
-                }
+                onChange={(option) => {
+                  const newClass = option || classOptions[0];
+                  setForm((prev) => ({ ...prev, selectedClass: newClass }));
+                }}
                 components={{
                   IndicatorSeparator: () => null,
                 }}
@@ -325,9 +379,7 @@ const FlightSearchForm = () => {
           </button>
         </div>
       </div>
-      {/* {showResults &&  */}
-      <FlightDetailsCard flights={flights} />
-      {/* // } */}
+      {showResults && <FlightDetailsCard flights={flights} />}
     </div>
   );
 };
