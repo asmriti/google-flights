@@ -17,10 +17,10 @@ type Props = {
 const FlightDetailsCard = (props: Props) => {
   const { flights } = props;
   const navigate = useNavigate();
-  const [showFilters, setShowFilters] = useState(true);
+  const [showFilters, _setShowFilters] = useState(true);
 
   const [sortAscending, setSortAscending] = useState(true);
-  const [sortBy, setSortBy] = useState<SortOption>("price");
+  const [sortBy, _setSortBy] = useState<SortOption>("price");
   const airlineOptions = useMemo(() => {
     const allAirlines = flights.flatMap(
       (f) => f.legs[0]?.carriers.marketing.map((c) => c.name) || []
