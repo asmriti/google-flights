@@ -20,6 +20,20 @@ interface PassengerInfo {
   phone: string;
 }
 
+interface PaymentInfo {
+  cardNumber: string;
+  expiryDate: string;
+  cvv: string;
+  cardholderName: string;
+  billingAddress: {
+    street: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    country: string;
+  };
+}
+
 const genderOptions = [
   { value: "male", label: "Male" },
   { value: "female", label: "Female" },
@@ -40,6 +54,20 @@ const FlightBooking = () => {
     gender: null,
     email: "",
     phone: "",
+  });
+
+  const [paymentInfo, setPaymentInfo] = useState<PaymentInfo>({
+    cardNumber: "",
+    expiryDate: "",
+    cvv: "",
+    cardholderName: "",
+    billingAddress: {
+      street: "",
+      city: "",
+      state: "",
+      zipCode: "",
+      country: "",
+    },
   });
 
   if (!flight) {
@@ -224,7 +252,7 @@ const FlightBooking = () => {
                       })
                     }
                     className="border border-primary/20 text-foreground text-sm mt-1 h-8 w-full
-                  placeholder:text-foreground block rounded-md px-3 py-1 shadow-xs transition-shadow outline-none"
+                  placeholder:text-foreground/90 block rounded-md px-3 py-1 shadow-xs transition-shadow outline-none"
                   />
                 </div>
                 <div className="space-y-2">
@@ -469,6 +497,177 @@ const FlightBooking = () => {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {currentStep === 2 && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-xl font-heading font-bold mb-4">
+                  Payment Information
+                </h2>
+                <p className="text-muted-foreground mb-6">
+                  Enter your payment details to complete the booking.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label htmlFor="cardNumber">Card Number *</label>
+                  <input
+                    id="cardNumber"
+                    value={paymentInfo.cardNumber}
+                    onChange={(e) =>
+                      setPaymentInfo({
+                        ...paymentInfo,
+                        cardNumber: e.target.value,
+                      })
+                    }
+                    placeholder="1234 5678 9012 3456"
+                    className="border border-primary/20 text-foreground text-sm mt-1 h-8 w-full
+                  placeholder:text-foreground block rounded-md px-3 py-1 shadow-xs transition-shadow outline-none"
+                  />
+                </div>
+
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <label htmlFor="expiryDate">Expiry Date *</label>
+                    <input
+                      id="expiryDate"
+                      value={paymentInfo.expiryDate}
+                      onChange={(e) =>
+                        setPaymentInfo({
+                          ...paymentInfo,
+                          expiryDate: e.target.value,
+                        })
+                      }
+                      placeholder="MM/YY"
+                      className="border border-primary/20 text-foreground text-sm mt-1 h-8 w-full
+                  placeholder:text-foreground block rounded-md px-3 py-1 shadow-xs transition-shadow outline-none"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label htmlFor="cvv">CVV *</label>
+                    <input
+                      id="cvv"
+                      value={paymentInfo.cvv}
+                      onChange={(e) =>
+                        setPaymentInfo({
+                          ...paymentInfo,
+                          cvv: e.target.value,
+                        })
+                      }
+                      placeholder="123"
+                      className="border border-primary/20 text-foreground text-sm mt-1 h-8 w-full
+                  placeholder:text-foreground block rounded-md px-3 py-1 shadow-xs transition-shadow outline-none"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label htmlFor="cardholderName">Cardholder Name *</label>
+                    <input
+                      id="cardholderName"
+                      value={paymentInfo.cardholderName}
+                      onChange={(e) =>
+                        setPaymentInfo({
+                          ...paymentInfo,
+                          cardholderName: e.target.value,
+                        })
+                      }
+                      placeholder="Smriti Aryal"
+                      className="border border-primary/20 text-foreground text-sm mt-1 h-8 w-full
+                  placeholder:text-foreground block rounded-md px-3 py-1 shadow-xs transition-shadow outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-medium mb-4">Billing Address</h3>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <label htmlFor="street">Street Address *</label>
+                      <input
+                        id="street"
+                        value={paymentInfo.billingAddress.street}
+                        onChange={(e) =>
+                          setPaymentInfo({
+                            ...paymentInfo,
+                            billingAddress: {
+                              ...paymentInfo.billingAddress,
+                              street: e.target.value,
+                            },
+                          })
+                        }
+                        placeholder="123 Main Street"
+                        className="border border-primary/20 text-foreground text-sm mt-1 h-8 w-full
+                  placeholder:text-foreground block rounded-md px-3 py-1 shadow-xs transition-shadow outline-none"
+                      />
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label htmlFor="city">City *</label>
+                        <input
+                          id="city"
+                          value={paymentInfo.billingAddress.city}
+                          onChange={(e) =>
+                            setPaymentInfo({
+                              ...paymentInfo,
+                              billingAddress: {
+                                ...paymentInfo.billingAddress,
+                                city: e.target.value,
+                              },
+                            })
+                          }
+                          placeholder="New York"
+                          className="border border-primary/20 text-foreground text-sm mt-1 h-8 w-full
+                  placeholder:text-foreground block rounded-md px-3 py-1 shadow-xs transition-shadow outline-none"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label htmlFor="state">State *</label>
+                        <input
+                          id="state"
+                          value={paymentInfo.billingAddress.state}
+                          onChange={(e) =>
+                            setPaymentInfo({
+                              ...paymentInfo,
+                              billingAddress: {
+                                ...paymentInfo.billingAddress,
+                                state: e.target.value,
+                              },
+                            })
+                          }
+                          placeholder="NY"
+                          className="border border-primary/20 text-foreground text-sm mt-1 h-8 w-full
+                  placeholder:text-foreground block rounded-md px-3 py-1 shadow-xs transition-shadow outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label htmlFor="zipCode">ZIP Code *</label>
+                        <input
+                          id="zipCode"
+                          value={paymentInfo.billingAddress.zipCode}
+                          onChange={(e) =>
+                            setPaymentInfo({
+                              ...paymentInfo,
+                              billingAddress: {
+                                ...paymentInfo.billingAddress,
+                                zipCode: e.target.value,
+                              },
+                            })
+                          }
+                          placeholder="10001"
+                          className="border border-primary/20 text-foreground text-sm mt-1 h-8 w-full
+                  placeholder:text-foreground block rounded-md px-3 py-1 shadow-xs transition-shadow outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 

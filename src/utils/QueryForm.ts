@@ -1,8 +1,5 @@
-// utils/queryForm.ts
-
 import type { SearchForm } from "../components/FlightSearchForm";
 
-// Serialize form to query params
 export const serializeForm = (form: SearchForm): Record<string, string> => ({
   tripType: form.tripType,
   originAirport: form.originAirport?.value || "",
@@ -43,7 +40,7 @@ export const deserializeForm = (params: URLSearchParams): SearchForm => {
       : null,
     departureDate: params.get("departureDate")
       ? new Date(params.get("departureDate")!)
-      : new Date(), // default to today
+      : new Date(),
     returnDate: params.get("returnDate")
       ? new Date(params.get("returnDate")!)
       : null,
@@ -58,6 +55,6 @@ export const deserializeForm = (params: URLSearchParams): SearchForm => {
           value: params.get("selectedClass")!,
           label: params.get("selectedClassLabel")!,
         }
-      : classOptions[0], // default to Economy
+      : classOptions[0],
   };
 };

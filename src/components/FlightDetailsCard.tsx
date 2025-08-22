@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Flight, FlightFilters, SortOption } from "../types/Flight";
 import { filterFlights, sortFlights } from "../utils/FilterFlight";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -21,11 +21,17 @@ const FlightDetailsCard = (props: Props) => {
 
   const [sortAscending, setSortAscending] = useState(true);
   const [sortBy, setSortBy] = useState<SortOption>("price");
+  const airlineOptions = useMemo(() => {
+    const allAirlines = flights.flatMap(
+      (f) => f.legs[0]?.carriers.marketing.map((c) => c.name) || []
+    );
+    return Array.from(new Set(allAirlines));
+  }, [flights]);
 
   const [filters, setFilters] = useState<FlightFilters>({
     priceRange: [150, 650],
     stops: [0, 1, 2],
-    airlines: ["Norse Atlantic Airways (UK)", "Aer Lingus"],
+    airlines: [],
     departureTime: ["morning", "afternoon", "evening", "night"],
   });
 
@@ -52,6 +58,15 @@ const FlightDetailsCard = (props: Props) => {
       };
     });
   };
+
+  useEffect(() => {
+    if (airlineOptions.length > 0) {
+      setFilters((prev) => ({
+        ...prev,
+        airlines: airlineOptions,
+      }));
+    }
+  }, [airlineOptions]);
 
   return (
     <div className="mt-4">
@@ -198,11 +213,8 @@ const FlightDetailsCard = (props: Props) => {
                   </div>
 
                   <div className="flex gap-3">
-                    <button className="flex-1 bg-transparent border-border border shadow-xs hover:bg-primary hover:text-white">
-                      View Details
-                    </button>
                     <button
-                      className="flex-1 bg-primary hover:bg-primary/90 text-white shadow-xs"
+                      className="flex-1 bg-primary hover:bg-primary/90 cursor-pointer text-white shadow-xs"
                       onClick={() =>
                         navigate("/booking", { state: { flight } })
                       }
