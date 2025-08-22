@@ -695,7 +695,7 @@ const FlightBooking = () => {
               </div>
               <div className="space-y-2">
                 <p className="text-sm text-muted-foreground">
-                  A confirmation email has been sent to {passengerInfo.email}
+                  A confirmation email has been sent to smritiaryal331@gmail.com
                 </p>
                 <p className="text-sm text-muted-foreground">
                   Please arrive at the airport at least 2 hours before
@@ -708,7 +708,9 @@ const FlightBooking = () => {
           {/* nav buttons */}
           <div className="flex justify-between mt-8 pt-6 border-t border-border">
             <button
-              className="shadow-xs bg-white text-sm border-border border"
+              className={`shadow-xs bg-white text-sm border-border border ${
+                bookingComplete || currentStep === 0 ? "cursor-not-allowed" : ""
+              }`}
               onClick={handlePreviousStep}
               disabled={currentStep === 0 || bookingComplete}
             >
@@ -719,7 +721,11 @@ const FlightBooking = () => {
                 currentStep === 2 ? handleCompleteBooking : handleNextStep
               }
               disabled={bookingComplete}
-              className="bg-primary text-muted hover:bg-primary/90 text-sm shadow-sm"
+              className={`bg-primary text-muted text-sm shadow-sm ${
+                bookingComplete
+                  ? "cursor-not-allowed hover:bg-primary"
+                  : "hover:bg-primary/90"
+              }`}
             >
               {currentStep === 2 ? "Complete Booking" : "Continue"}
             </button>
