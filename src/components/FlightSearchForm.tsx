@@ -3,10 +3,10 @@ import DatePicker from "react-datepicker";
 import { useEffect, useState } from "react";
 import AirportPicker from "./AirportPickerSelect";
 import "react-datepicker/dist/react-datepicker.css";
+import FlightDetailsCard from "./FlightDetailsCard";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import { searchFlights } from "../services/searchFlightService";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import FlightDetailsCard from "./FlightDetailsCard";
 import { loadFromStorage, saveToStorage } from "../utils/LocalStorage";
 
 type SearchForm = {
@@ -29,6 +29,7 @@ const FlightSearchForm = () => {
   const [loading, setLoading] = useState(false);
   const [flights, setFlights] = useState<any[]>([]);
   const [showResults, setShowResults] = useState(false);
+  const [isEditable, setIsEditable] = useState(true);
 
   const classOptions = [
     { value: "economy", label: "Economy" },
@@ -78,16 +79,21 @@ const FlightSearchForm = () => {
       },
     }));
 
-  const handleSearchFlights = () => {
+  const handleSearchFlights = async () => {
     if (!form.originAirport || !form.destinationAirport) {
       alert("Please select both origin and destination airports");
       return;
     }
 
-    setTimeout(() => {
+    setLoading(true);
+    try {
+      const res = await searchFlights();
+      setFlights(res.data.itineraries);
       setShowResults(true);
+      setIsEditable(false);
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
   };
 
   useEffect(() => {
@@ -103,6 +109,7 @@ const FlightSearchForm = () => {
     saveToStorage("searchForm", form);
   }, [form]);
 
+  console.log(flights, "fli");
   return (
     <div className="max-w-4xl mx-auto">
       <div
@@ -122,7 +129,10 @@ const FlightSearchForm = () => {
                     tripType: type as "roundtrip" | "oneway" | "multicity",
                   }))
                 }
+                disabled={!isEditable}
                 className={`px-4 py-2 rounded-lg font-medium transition-colors focus-visible:outline-none ${
+                  !isEditable ? "cursor-not-allowed" : "cursor-pointer"
+                } ${
                   form.tripType === type
                     ? "bg-primary text-white"
                     : "bg-muted text-foreground hover:bg-muted/80"
@@ -155,6 +165,7 @@ const FlightSearchForm = () => {
                   }))
                 }
                 placeholder="Where from?"
+                isDisabled={!isEditable}
               />
             </div>
             <div className="space-y-2">
@@ -173,6 +184,7 @@ const FlightSearchForm = () => {
                   }))
                 }
                 placeholder="Where to?"
+                isDisabled={!isEditable}
               />
             </div>
           </div>
@@ -199,7 +211,12 @@ const FlightSearchForm = () => {
                   minDate={new Date()}
                   dateFormat="dd MMM yyyy"
                   placeholderText="Select departure date"
-                  className="w-full px-3 py-2 border rounded-md border-border bg-white hover:border-primary focus-visible:outline-none"
+                  disabled={!isEditable}
+                  className={`w-full px-3 py-2 border rounded-md border-border bg-white focus-visible:outline-none ${
+                    !isEditable
+                      ? "cursor-not-allowed hover:border-border"
+                      : "hover:border-primary"
+                  }`}
                 />
               </div>
             </div>
@@ -223,7 +240,12 @@ const FlightSearchForm = () => {
                     minDate={form.departureDate || new Date()}
                     dateFormat="dd MMM yyyy"
                     placeholderText="Select return date"
-                    className="w-full px-3 py-2 border rounded-md border-border bg-white hover:border-primary focus-visible:outline-none"
+                    disabled={!isEditable}
+                    className={`w-full px-3 py-2 border rounded-md border-border bg-white focus-visible:outline-none ${
+                      !isEditable
+                        ? "cursor-not-allowed hover:border-border"
+                        : "hover:border-primary"
+                    }`}
                   />
                 </div>
               </div>
@@ -245,7 +267,12 @@ const FlightSearchForm = () => {
                 {/* Input-like trigger */}
                 <button
                   onClick={() => setIsOpen(!isOpen)}
-                  className="flex w-full items-center justify-between rounded-lg border border-border bg-white px-3 py-2 text-left hover:border-primary focus:border-primary focus:outline-none"
+                  disabled={!isEditable || loading}
+                  className={`flex w-full items-center justify-between rounded-lg border border-border bg-white px-3 py-2 text-left  focus:border-primary focus:outline-none ${
+                    !isEditable
+                      ? "cursor-not-allowed hover:border-border"
+                      : "hover:border-primary"
+                  }`}
                 >
                   <span className="text-foreground text-sm font-medium">
                     {totalPassengers} Passenger{totalPassengers > 1 ? "s" : ""}
@@ -338,6 +365,7 @@ const FlightSearchForm = () => {
                 components={{
                   IndicatorSeparator: () => null,
                 }}
+                isDisabled={!isEditable}
                 styles={{
                   control: (base) => ({
                     ...base,
@@ -370,13 +398,29 @@ const FlightSearchForm = () => {
             </div>
           </div>
 
-          <button
-            className="h-12 bg-primary hover:bg-primary/90 text-white font-medium text-lg mt-4 rounded-md"
-            onClick={handleSearchFlights}
-          >
-            <FontAwesomeIcon icon={faSearch} className="w-5 h-5 mr-2" />
-            {loading ? "Searching..." : "Search Flights"}
-          </button>
+          <div className="flex justify-between items-center gap-4">
+            <button
+              className={`px-4 py-2 rounded-md text-white w-full ${
+                loading || !isEditable
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-primary cursor-pointer"
+              }`}
+              onClick={handleSearchFlights}
+              disabled={!isEditable || loading}
+            >
+              <FontAwesomeIcon icon={faSearch} className="w-5 h-5 mr-2" />
+              {loading ? "Searching..." : "Search Flights"}
+            </button>
+
+            {!isEditable && (
+              <button
+                onClick={() => setIsEditable(true)}
+                className="px-4 py-2 bg-primary hover:bg-primary/90 border-border border shadow-xs text-muted rounded-md w-full cursor-pointer"
+              >
+                Modify Search
+              </button>
+            )}
+          </div>
         </div>
       </div>
       {showResults && <FlightDetailsCard flights={flights} />}

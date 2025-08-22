@@ -3,6 +3,13 @@ import type { Flight } from "../types/Flight";
 import { useState } from "react";
 import DatePicker from "react-datepicker";
 import Select from "react-select";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faCheck,
+  faMoneyBill,
+  faPlaneDeparture,
+  faUser,
+} from "@fortawesome/free-solid-svg-icons";
 
 interface PassengerInfo {
   firstName: string;
@@ -25,6 +32,7 @@ const FlightBooking = () => {
 
   const [currentStep, setCurrentStep] = useState(0);
   const [bookingComplete, setBookingComplete] = useState(false);
+  const [selectedSeat, setSelectedSeat] = useState<string | null>(null);
   const [passengerInfo, setPassengerInfo] = useState<PassengerInfo>({
     firstName: "",
     lastName: "",
@@ -39,10 +47,26 @@ const FlightBooking = () => {
   }
 
   const steps = [
-    { id: 0, title: "Passenger Info" },
-    { id: 1, title: "Seat Selection" },
-    { id: 2, title: "Payment" },
-    { id: 3, title: "Confirmation" },
+    {
+      id: 0,
+      title: "Passenger Info",
+      icon: () => <FontAwesomeIcon icon={faUser} />,
+    },
+    {
+      id: 1,
+      title: "Seat Selection",
+      icon: () => <FontAwesomeIcon icon={faPlaneDeparture} />,
+    },
+    {
+      id: 2,
+      title: "Payment",
+      icon: () => <FontAwesomeIcon icon={faMoneyBill} />,
+    },
+    {
+      id: 3,
+      title: "Confirmation",
+      icon: () => <FontAwesomeIcon icon={faCheck} />,
+    },
   ];
 
   const handleNextStep = () => {
@@ -69,16 +93,107 @@ const FlightBooking = () => {
 
   const formattedDeparture = formatDate(flight.legs[0].departure);
 
+  // mock data
+  const seatMap = {
+    rows: 30,
+    seatsPerRow: 6,
+    unavailableSeats: ["1A", "1B", "5C", "12F", "15A", "20D"],
+    premiumSeats: [
+      "1A",
+      "1B",
+      "1C",
+      "1D",
+      "1E",
+      "1F",
+      "2A",
+      "2B",
+      "2C",
+      "2D",
+      "2E",
+      "2F",
+    ],
+  };
+
+  const generateSeatMap = () => {
+    const seats = [];
+    for (let row = 1; row <= seatMap.rows; row++) {
+      const rowSeats = [];
+      const seatLetters = ["A", "B", "C", "D", "E", "F"];
+      for (let i = 0; i < seatLetters.length; i++) {
+        const seatId = `${row}${seatLetters[i]}`;
+        const isUnavailable = seatMap.unavailableSeats.includes(seatId);
+        const isPremium = seatMap.premiumSeats.includes(seatId);
+        const isSelected = selectedSeat === seatId;
+
+        rowSeats.push({
+          id: seatId,
+          available: !isUnavailable,
+          premium: isPremium,
+          selected: isSelected,
+        });
+      }
+      seats.push({ row, seats: rowSeats });
+    }
+    return seats;
+  };
+
   return (
-    <div className="container mx-auto px-4 mt-4">
+    <div className="container mx-auto px-4 my-4">
       <h1 className="text-xl font-heading font-bold text-foreground text-center">
         Complete your Booking
       </h1>
 
-      <p className="text-sm text-muted-foreground text-center">
+      <p className="text-sm text-muted-foreground text-center mt-2">
         {flight.legs[0]?.origin.name} → {flight.legs[0]?.destination.name} •{" "}
         {formattedDeparture}
       </p>
+
+      {/* progress */}
+      <div className="my-8">
+        <div className="flex items-center justify-center">
+          {steps.map((step, index) => {
+            const Icon = step.icon;
+            const isActive = currentStep === index;
+            const isCompleted = currentStep > index;
+
+            return (
+              <div key={step.id} className="flex items-center">
+                <div
+                  className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${
+                    isCompleted
+                      ? "bg-primary border-primary text-muted"
+                      : isActive
+                      ? "border-primary text-primary"
+                      : "border-muted text-muted-foreground"
+                  }`}
+                >
+                  {isCompleted ? (
+                    <FontAwesomeIcon icon={faCheck} className="w-5 h-5" />
+                  ) : (
+                    <Icon />
+                  )}
+                </div>
+                <div className="ml-3">
+                  <div
+                    className={`text-sm font-medium ${
+                      isActive ? "text-primary" : "text-muted-foreground"
+                    }`}
+                  >
+                    {step.title}
+                  </div>
+                </div>
+                {index < steps.length - 1 && (
+                  <div
+                    className={`w-16 h-px mx-4 ${
+                      isCompleted ? "bg-primary" : "bg-muted"
+                    }`}
+                  />
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
       <div className="rounded-lg border border-border bg-card text-foreground shadow-sm mt-4 max-w-4xl mx-auto">
         <div className="p-6">
@@ -252,6 +367,141 @@ const FlightBooking = () => {
                   placeholder:text-foreground block rounded-md px-3 py-1 shadow-xs transition-shadow outline-none"
                   />
                 </div>
+              </div>
+            </div>
+          )}
+
+          {currentStep === 1 && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-xl font-heading font-bold mb-4">
+                  Select Your Seat
+                </h2>
+                <p className="text-muted-foreground mb-6">
+                  Choose your preferred seat for the flight.
+                </p>
+              </div>
+
+              <div className="bg-muted/30 p-4 rounded-lg">
+                <div className="text-center mb-4">
+                  <div className="text-sm font-medium">
+                    Aircraft: Boeing 777-300ER
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Economy Class
+                  </div>
+                </div>
+
+                <div className="max-h-96 overflow-y-auto">
+                  <div className="space-y-1">
+                    {generateSeatMap()
+                      .slice(0, 10)
+                      .map((row) => (
+                        <div
+                          key={row.row}
+                          className="flex items-center justify-center gap-1"
+                        >
+                          <div className="w-6 text-xs text-center text-muted-foreground">
+                            {row.row}
+                          </div>
+                          {row.seats.map((seat, index) => (
+                            <div key={seat.id} className="flex">
+                              <button
+                                onClick={() =>
+                                  seat.available && setSelectedSeat(seat.id)
+                                }
+                                disabled={!seat.available}
+                                className={`w-8 h-8 text-xs rounded border flex justify-center ${
+                                  seat.selected
+                                    ? "bg-primary text-muted border-primary"
+                                    : seat.available
+                                    ? seat.premium
+                                      ? "bg-pink/20 border-pink hover:bg-secondary/30"
+                                      : "bg-background border-border hover:bg-muted"
+                                    : "bg-muted border-muted text-muted-foreground cursor-not-allowed"
+                                }`}
+                              >
+                                {seat.id.slice(-1)}
+                              </button>
+                              {index === 2 && <div className="w-4" />}
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-center gap-6 mt-4 text-xs">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-background border border-border rounded"></div>
+                    <span>Available</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-primary rounded"></div>
+                    <span>Selected</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-muted rounded"></div>
+                    <span>Occupied</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-pink/20 border border-pink rounded"></div>
+                    <span>Premium (+$25)</span>
+                  </div>
+                </div>
+              </div>
+
+              {selectedSeat && (
+                <div className="p-4 bg-primary/10 border border-primary/20 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <FontAwesomeIcon
+                      icon={faCheck}
+                      className="w-5 h-5 text-primary"
+                    />
+                    <span className="font-medium">
+                      Seat {selectedSeat} selected
+                    </span>
+                    {seatMap.premiumSeats.includes(selectedSeat) && (
+                      <span className="px-2 py-1 text-xs bg-accent  text-white rounded-full">
+                        Premium $25
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {currentStep === 3 && (
+            <div className="text-center space-y-6">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                <FontAwesomeIcon
+                  icon={faCheck}
+                  className="w-8 h-8 text-green-600"
+                />
+              </div>
+              <div>
+                <h2 className="text-2xl font-heading font-bold mb-2">
+                  Booking Confirmed!
+                </h2>
+                <p className="text-muted-foreground">
+                  Your flight has been successfully booked.
+                </p>
+              </div>
+              <div className="bg-muted/50 p-6 rounded-lg">
+                <div className="text-sm text-muted-foreground mb-2">
+                  Booking Reference
+                </div>
+                <div className="text-2xl font-bold font-mono">ABC123XYZ</div>
+              </div>
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  A confirmation email has been sent to {passengerInfo.email}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Please arrive at the airport at least 2 hours before
+                  departure.
+                </p>
               </div>
             </div>
           )}

@@ -11,12 +11,14 @@ interface AirportPickerProps {
   value: Option | null;
   onChange: (option: Option | null) => void;
   placeholder?: string;
+  isDisabled: boolean;
 }
 
 const AirportPicker = ({
   value,
   onChange,
   placeholder,
+  isDisabled = false,
 }: AirportPickerProps) => {
   const [loading, setLoading] = useState(true);
   const [options, setOptions] = useState<Option[]>([]);
@@ -40,6 +42,7 @@ const AirportPicker = ({
       onChange={onChange}
       options={options}
       placeholder={loading ? "Loading ..." : placeholder}
+      isDisabled={isDisabled || loading}
       isClearable
       className="w-full"
       classNamePrefix="airport-select"
@@ -54,7 +57,11 @@ const AirportPicker = ({
           borderColor: "var(--color-border)",
           boxShadow: "none",
           textAlign: "left",
-          "&:hover": { borderColor: "var(--color-primary)" },
+          "&:hover": {
+            borderColor: !isDisabled
+              ? "var(--color-primary)"
+              : base.borderColor,
+          },
         }),
         option: (base, state) => ({
           ...base,

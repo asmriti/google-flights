@@ -81,7 +81,10 @@ const FlightDetailsCard = (props: Props) => {
             Showing {filteredAndSortedFlights.length} of {flights.length}{" "}
             flights • Prices include taxes and fees
           </p>
-          <button onClick={() => setSortAscending(!sortAscending)}>
+          <button
+            onClick={() => setSortAscending(!sortAscending)}
+            className="border border-border bg-transparent rounded-md cursor-pointer hover:bg-neutral-50"
+          >
             {sortAscending ? (
               <FontAwesomeIcon icon={faArrowUp} />
             ) : (
