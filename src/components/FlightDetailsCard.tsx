@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type { Flight, FlightFilters, SortOption } from "../types/Flight";
 import { filterFlights, sortFlights } from "../utils/FilterFlight";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -9,7 +9,6 @@ import {
   faPlaneDeparture,
 } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
-import { loadFromStorage, saveToStorage } from "../utils/LocalStorage";
 
 type Props = {
   flights: Flight[];
@@ -20,34 +19,15 @@ const FlightDetailsCard = (props: Props) => {
   const navigate = useNavigate();
   const [showFilters, setShowFilters] = useState(true);
 
-  const [sortAscending, setSortAscending] = useState<boolean>(() =>
-    loadFromStorage<boolean>("sortAscending", true)
-  );
+  const [sortAscending, setSortAscending] = useState(true);
+  const [sortBy, setSortBy] = useState<SortOption>("price");
 
-  const [sortBy, setSortBy] = useState<SortOption>(() =>
-    loadFromStorage<SortOption>("sortBy", "price")
-  );
-
-  const [filters, setFilters] = useState<FlightFilters>(() =>
-    loadFromStorage<FlightFilters>("filters", {
-      priceRange: [150, 650],
-      stops: [0, 1, 2],
-      airlines: ["Norse Atlantic Airways (UK)", "Aer Lingus"],
-      departureTime: ["morning", "afternoon", "evening", "night"],
-    })
-  );
-
-  useEffect(() => {
-    saveToStorage("filters", filters);
-  }, [filters]);
-
-  useEffect(() => {
-    saveToStorage("sortBy", sortBy);
-  }, [sortBy]);
-
-  useEffect(() => {
-    saveToStorage("sortAscending", sortAscending);
-  }, [sortAscending]);
+  const [filters, setFilters] = useState<FlightFilters>({
+    priceRange: [150, 650],
+    stops: [0, 1, 2],
+    airlines: ["Norse Atlantic Airways (UK)", "Aer Lingus"],
+    departureTime: ["morning", "afternoon", "evening", "night"],
+  });
 
   const filteredAndSortedFlights = useMemo(() => {
     const filtered = filterFlights(flights, filters);

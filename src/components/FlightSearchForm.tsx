@@ -7,9 +7,10 @@ import FlightDetailsCard from "./FlightDetailsCard";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import { searchFlights } from "../services/searchFlightService";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { loadFromStorage, saveToStorage } from "../utils/LocalStorage";
+import { useSearchParams } from "react-router-dom";
+import { deserializeForm, serializeForm } from "../utils/QueryForm";
 
-type SearchForm = {
+export type SearchForm = {
   tripType: "roundtrip" | "oneway" | "multicity";
   originAirport: any;
   destinationAirport: any;
@@ -24,6 +25,13 @@ type SearchForm = {
   selectedClass: { value: string; label: string };
 };
 
+const classOptions = [
+  { value: "economy", label: "Economy" },
+  { value: "premium economy", label: "Premium Economy" },
+  { value: "business", label: "Business" },
+  { value: "first", label: "First" },
+];
+
 const FlightSearchForm = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -31,26 +39,15 @@ const FlightSearchForm = () => {
   const [showResults, setShowResults] = useState(false);
   const [isEditable, setIsEditable] = useState(true);
 
-  const classOptions = [
-    { value: "economy", label: "Economy" },
-    { value: "premium economy", label: "Premium Economy" },
-    { value: "business", label: "Business" },
-    { value: "first", label: "First" },
-  ];
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [form, setForm] = useState<SearchForm>(() =>
+    deserializeForm(searchParams)
+  );
 
-  const [form, setForm] = useState<SearchForm>(() => {
-    const loaded = loadFromStorage<SearchForm>("searchForm", {
-      tripType: "roundtrip",
-      originAirport: null,
-      destinationAirport: null,
-      departureDate: new Date(),
-      returnDate: null,
-      passengers: { adults: 1, children: 0, infantsInSeat: 0, infantsOnLap: 0 },
-      selectedClass: classOptions[0],
-    });
-
-    return loaded;
-  });
+  useEffect(() => {
+    const params = serializeForm(form);
+    setSearchParams(params);
+  }, [form, setSearchParams]);
 
   const totalPassengers =
     (form.passengers.adults ?? 0) +
@@ -85,9 +82,15 @@ const FlightSearchForm = () => {
       return;
     }
 
+    if (!form.departureDate || !form.returnDate) {
+      alert("Please add dates before searching");
+      return;
+    }
+
     setLoading(true);
     try {
-      const res = await searchFlights();
+      const queryParams = serializeForm(form);
+      const res = await searchFlights(queryParams);
       setFlights(res.data.itineraries);
       setShowResults(true);
       setIsEditable(false);
@@ -96,20 +99,6 @@ const FlightSearchForm = () => {
     }
   };
 
-  useEffect(() => {
-    setLoading(true);
-    searchFlights()
-      .then((res) => {
-        setFlights(res.data.itineraries);
-      })
-      .finally(() => setLoading(false));
-  }, []);
-
-  useEffect(() => {
-    saveToStorage("searchForm", form);
-  }, [form]);
-
-  console.log(flights, "fli");
   return (
     <div className="max-w-4xl mx-auto">
       <div
