@@ -16,8 +16,12 @@ git clone git@github.com:asmriti/google-flights.git
 
 cd google-flights
 ```
+Clone the backend repository for mock api
+```tsx
+git clone git@github.com:asmriti/google-flights-api.git
+```
 
-2. Install dependencies
+2. Install dependencies on both cloned projects
  ``` tsx 
 npm install
 ```
